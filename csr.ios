@@ -1,0 +1,26 @@
+! static route to ARS subnet pointing to CSR subnet default gateway, to prevent recursive routing failure for ARS endpoint addresses learned via BGP from ARS
+ip route 10.0.0.64 255.255.255.192 10.0.0.129 
+! static route to spoke VNets address space pointing to CSR subnet default gateway
+ip route 172.16.0.0 255.240.0.0 GigabitEthernet1 10.0.0.1
+
+router bgp 65010
+ bgp log-neighbor-changes
+! let bgp redistribute static routes to ARS
+ redistribute static 
+ neighbor 10.0.0.68 remote-as 65515
+ neighbor 10.0.0.68 ebgp-multihop 255
+ neighbor 10.0.0.68 soft-reconfiguration inbound
+! enable route-map on bgp peer, to set next-hop for spoke routes to the Azure Firewall address
+ neighbor 10.0.0.68 route-map SET_NEXTHOP_TO_SPOKES out
+ neighbor 10.0.0.69 remote-as 65515
+ neighbor 10.0.0.69 ebgp-multihop 255
+ neighbor 10.0.0.69 soft-reconfiguration inbound
+ neighbor 10.0.0.69 route-map SET_NEXTHOP_TO_SPOKES out
+
+ip access-list standard 10
+ 10 permit 172.16.0.0 0.15.255.255
+!
+! route-map to set next-hop for spoke routes to the Azure Firewall address
+route-map SET_NEXTHOP_TO_SPOKES permit 10 
+ match ip address 10
+ set ip next-hop 10.0.1.68
