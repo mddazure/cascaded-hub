@@ -10,4 +10,33 @@ This lab demonstrates how to build a "cascaded hub" hub & spoke network foundati
 
 ![image](/images/cascaded-hub.png)
 
+# Deploy
+Log in to Azure Cloud Shell at https://shell.azure.com/ and select Bash.
+
+Ensure Azure CLI and extensions are up to date:
+  
+      az upgrade --yes
+  
+If necessary select your target subscription:
+  
+      az account set --subscription <Name or ID of subscription>
+  
+Clone the  GitHub repository:
+  
+      git clone hhttps://github.com/mddazure/cascaded-hub
+  
+Change directory:
+  
+      cd ./cascaded-hub
+
+Accept the terms for the CSR8000v Marketplace offer:
+
+      az vm image terms accept -p cisco -f cisco-c8000v-byol --plan 17_13_01a-byol -o none
+
+Deploy the Bicep template:
+
+      az deployment sub create --location swedencentral --template-file templates/main.bicep
+
+Verify that all components in the diagram above have been deployed to the resourcegroup `cascaded-hub-rg` and are healthy. 
+
 
