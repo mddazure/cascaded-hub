@@ -10,6 +10,8 @@ param gwsubnetName string = 'GatewaySubnet'
 param gwsubnetPrefix string = '10.0.0.0/27'
 param nvasubnetName string = 'NVA-Subnet'
 param nvasubnetPrefix string = '10.0.0.128/26'
+param c8k1IPv4 string = '10.0.0.132'
+param c8k2IPv4 string = '10.0.0.133'
 
 param cascadedhubName string = 'cascaded-hub-vnet'
 param cascadedhubAddressPrefix string = '10.0.1.0/24'
@@ -23,6 +25,7 @@ param bastionsubnetPrefix string = '10.0.1.192/26'
 param spoke1Name string = 'spoke1-vnet'
 param spoke1vmsubnetName string = 'spoke1-vm-subnet'
 param spoke1AddressPrefix string = '172.16.1.0/24'
+param spoke1vmIPv4 string = '172.16.1.4'
 param spoke1vmsubnetPrefix string = '172.16.1.0/26'
 param spoke2Name string = 'spoke2-vnet'
 param spoke2AddressPrefix string = '172.16.2.0/24'
@@ -34,7 +37,7 @@ param spoke3vmsubnetName string = 'spoke3-vm-subnet'
 param spoke3vmsubnetPrefix string = '172.16.3.0/26'
 
 param adminUser string = 'AzureAdmin'
-param adminPw string = 'P@ssword1234'
+param adminPw string = 'Cascaded-2025!'
 
 // Define spoke address ranges for firewall rules
 var spokeAddressRanges = [
@@ -42,6 +45,15 @@ var spokeAddressRanges = [
   spoke2AddressPrefix  // 172.16.2.0/24
   spoke3AddressPrefix  // 172.16.3.0/24
 ]
+
+// demo application container image
+param containerImage string = 'madedroo/azure-region-viewer:latest'
+
+//port backend vm's listen on
+param exposedPort int = 80
+
+//port exposed by the container
+param containerPort int = 3000
 
 targetScope = 'subscription'
 
@@ -238,6 +250,7 @@ module c8k1 'csr.bicep' = {
     adminUser: adminUser
     adminPw: adminPw
     subnetId: hubvnet.outputs.subnetResourceIds[2] // Assuming third subnet is used
+    c8kIPv4: c8k1IPv4
 
   }
 }
@@ -250,7 +263,7 @@ module c8k2 'csr.bicep' = {
     adminUser: adminUser
     adminPw: adminPw
     subnetId: hubvnet.outputs.subnetResourceIds[2] // Assuming third subnet is used
-
+    c8kIPv4: c8k2IPv4
   }
 }
 
@@ -331,5 +344,59 @@ module firewall 'br/public:avm/res/network/azure-firewall:0.9.1' = {
     virtualNetworkResourceId: cascadedhubvnet.outputs.resourceId
     azureSkuTier: 'Basic'
     firewallPolicyId: firewallpolicy.outputs.resourceId
+  }
+}
+module vmspoke1 'br/public:avm/res/compute/virtual-machine:0.20.0' = {
+  name: 'spoke1-vm-deployment'
+  scope: rg
+  params: {
+    location: location1
+    name: 'spoke1-vm'
+    adminUsername: adminUser
+    adminPassword: adminPw
+    availabilityZone: -1
+    imageReference: {
+      offer: '0001-com-ubuntu-server-jammy'
+      publisher: 'Canonical'
+      sku: '22_04-lts-gen2'
+      version: 'latest'
+    }
+    nicConfigurations: [
+      {
+        ipConfigurations: [
+          {
+            name: 'ipconfig01'
+            privateIPAddressVersion: 'IPv4'
+            subnetResourceId: spoke1vnet.outputs.subnetResourceIds[0]
+            privateIPAllocationMethod: 'Static'
+            privateIPAddress: spoke1vmIPv4
+          }
+        ]
+        nicSuffix: '-nic-01'
+        enableAcceleratedNetworking: false
+      }
+    ]
+    
+    osDisk: {
+      diskSizeGB: 30
+      managedDisk: {
+        storageAccountType: 'Standard_LRS'
+      }
+    }
+    osType: 'Linux'
+    vmSize: 'Standard_B1ms'
+    bootDiagnostics: true
+    // container image will be started via a VM extension module
+  }
+}
+module vmspoke1ext 'vm-extension.bicep' = {
+  name: 'spoke1-vm-extension-deployment'
+  scope: rg
+  params: {
+    vmName: vmspoke1.outputs.name
+    location: location1
+    containerImage: containerImage
+    containerPort: containerPort
+    exposedPort: exposedPort
   }
 }

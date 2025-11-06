@@ -4,6 +4,7 @@ param adminUser string
 param adminPw string
 param location string
 param subnetId string
+param c8kIPv4 string
 
 resource nicPubIP 'Microsoft.Network/networkInterfaces@2020-08-01' = {
   name: '${vmName}-nic'
@@ -15,11 +16,12 @@ resource nicPubIP 'Microsoft.Network/networkInterfaces@2020-08-01' = {
         name: 'ipv4config0'
         properties:{
           primary: true
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
           privateIPAddressVersion: 'IPv4'
           subnet: {
             id: subnetId
-          }       
+          }
+          privateIPAddress: c8kIPv4
         }
       }
     ]
