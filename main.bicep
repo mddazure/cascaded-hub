@@ -1,4 +1,4 @@
-param rgName string = 'cascaded-hub-rg'
+param rgName string = 'cascaded-hub-rg-2'
 param subscriptionId string = subscription().subscriptionId
 param location1 string = 'swedencentral'
 
@@ -139,32 +139,6 @@ module cascadedhubvnet 'br/public:avm/res/network/virtual-network:0.7.1' = {
         remotePeeringEnabled: true
         remotePeeringAllowForwardedTraffic: true
       }
-      
-      
-      {
-        name: 'cascaded-hub-to-spoke1'
-        remotePeeringName: 'spoke1-to-cascaded-hub'
-        remoteVirtualNetworkResourceId: spoke1vnet.outputs.resourceId
-        allowVirtualNetworkAccess: true
-        allowForwardedTraffic: true
-        remotePeeringEnabled: true
-      }
-     {
-        name: 'cascaded-hub-to-spoke2'
-        remotePeeringName: 'spoke2-to-cascaded-hub'
-        remoteVirtualNetworkResourceId: spoke2vnet.outputs.resourceId
-        allowVirtualNetworkAccess: true
-        allowForwardedTraffic: true
-        remotePeeringEnabled: true
-      }
-     {
-        name: 'cascaded-hub-to-spoke3'
-        remotePeeringName: 'spoke3-to-cascaded-hub'
-        remoteVirtualNetworkResourceId: spoke3vnet.outputs.resourceId
-        allowVirtualNetworkAccess: true
-        allowForwardedTraffic: true
-        remotePeeringEnabled: true
-      }
     ]
   }
 }
@@ -182,10 +156,20 @@ module spoke1vnet 'br/public:avm/res/network/virtual-network:0.7.1' = {
         addressPrefixes: [
           spoke1vmsubnetPrefix
         ]
-
+        routeTableResourceId: spokertable.outputs.resourceId
       }
     ]
     location: location1
+    peerings: [
+           {
+        name: 'spoke1-to-cascaded-hub'
+        remotePeeringName: 'cascaded-hub-to-spoke1'
+        remoteVirtualNetworkResourceId: cascadedhubvnet.outputs.resourceId
+        allowVirtualNetworkAccess: true
+        allowForwardedTraffic: true
+        remotePeeringEnabled: true
+      } 
+    ]
   }
 }
 module spoke2vnet 'br/public:avm/res/network/virtual-network:0.7.1' = {
@@ -202,10 +186,20 @@ module spoke2vnet 'br/public:avm/res/network/virtual-network:0.7.1' = {
         addressPrefixes: [
           spoke2vmsubnetPrefix
         ]
-
+        routeTableResourceId: spokertable.outputs.resourceId
       }
     ]
     location: location1
+    peerings: [
+           {
+        name: 'spoke2-to-cascaded-hub'
+        remotePeeringName: 'cascaded-hub-to-spoke2'
+        remoteVirtualNetworkResourceId: cascadedhubvnet.outputs.resourceId
+        allowVirtualNetworkAccess: true
+        allowForwardedTraffic: true
+        remotePeeringEnabled: true
+      } 
+    ]
   }
 }
 module spoke3vnet 'br/public:avm/res/network/virtual-network:0.7.1' = {
@@ -222,10 +216,20 @@ module spoke3vnet 'br/public:avm/res/network/virtual-network:0.7.1' = {
         addressPrefixes: [
           spoke3vmsubnetPrefix
         ]
-
+        routeTableResourceId: spokertable.outputs.resourceId
       }
     ]
     location: location1
+    peerings: [
+      {
+        name: 'spoke3-to-cascaded-hub'
+        remotePeeringName: 'cascaded-hub-to-spoke3'
+        remoteVirtualNetworkResourceId: cascadedhubvnet.outputs.resourceId
+        allowVirtualNetworkAccess: true
+        allowForwardedTraffic: true
+        remotePeeringEnabled: true
+      }
+    ]
   }
 }
 module ergw 'br/public:avm/res/network/virtual-network-gateway:0.10.0' = {
@@ -398,5 +402,23 @@ module vmspoke1ext 'vm-extension.bicep' = {
     containerImage: containerImage
     containerPort: containerPort
     exposedPort: exposedPort
+  }
+}
+module spokertable 'br/public:avm/res/network/route-table:0.5.0' = {
+  name: 'spoke1-route-table-deployment'
+  scope: rg
+    params: {
+    location: location1
+    name: 'spoke1-rt'
+    routes: [
+      {
+        name: 'default-route-to-azfw'
+        properties: {
+        addressPrefix: '0.0.0.0/0'
+        nextHopType: 'VirtualAppliance'
+        nextHopIpAddress: firewall.outputs.privateIp
+        }
+      }
+    ]
   }
 }
