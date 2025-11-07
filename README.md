@@ -4,7 +4,7 @@ The VNET-based hub & spoke network foundation recommended by the [Cloud Aoption 
 
 Some customers choose to implement a "cascaded hub" model, where an intermediate VNET sits between the hub- and spoke VNETs. VNET peering is "non-transitive", meaning that the spoke VNET's prefixes are now not routeable from the hub VNET, and are not advertised by the Expressroute Gateway to the MSEE routers. The MSEE routers nor the on premise routers have a route to the spoke prefixes, so that the spokes are now unreachable from on premise.
 
-A solution to thsi problem is to inject the spoke VNET prefixes into the Expressroute Gateway. This requires Azure Route Server (ARS), which the element in Azure that provides a BGP interface to the Azure routing plane, and a Network Virtual Appliance to originate and inject the spoke prefixes into ARS (ARS itself does not have the ability to originate routes).
+A solution to this problem is to inject the spoke VNET prefixes into the Expressroute Gateway. This requires Azure Route Server (ARS), which is the element in Azure that provides a BGP interface to the Azure routing plane, and a Network Virtual Appliance to originate and inject the spoke prefixes into ARS. At the time of writing on October 2025, ARS itself does not have the ability to originate routes.
 
 This lab demonstrates how to build a "cascaded hub" hub & spoke network foundation using ARS and the Cisco 8000v NVA.
 
@@ -38,6 +38,8 @@ Deploy the Bicep template:
       az deployment sub create --location swedencentral --template-file templates/main.bicep
 
 Verify that all components in the diagram above have been deployed to the resourcegroup `cascaded-hub-rg-2` and are healthy. 
+
+:point_right: The Expressroute circuits and Expressrouter provider components are not part of the lab deployment and must be provisioned separately.
 
 Credentials:
 
@@ -168,7 +170,7 @@ Inspecting the Expressroute cicruit's route table shows that the spoke supernet 
 
 Note that only the spoke supernet learned from c8k-1 (AS 65010) is advertised to and installed in the circuit's route table. This is normal BGP behavior.
 
-When c8k-1 is turned off, the route learned from c8k-2 appears in the circuit's route table. This demonstrates high availability of the route injectiion mechanism with a pair NVA's:
+When c8k-1 is turned off, the route learned from c8k-2 appears in the circuit's route table. This demonstrates high availability of the route injection mechanism with a pair of NVA's:
 
 ```
 az network routeserver peering list-learned-routes -g cascaded-hub-rg-2 --routeserver RouteServer -n c8k1BgpConn
@@ -179,7 +181,7 @@ az network routeserver peering list-learned-routes -g cascaded-hub-rg-2 --routes
 ```
 ![image](/images/lab-er-rt-c8k2.png)
 
-A test VNET connected via a seperate Expressroute circuit to the same Megaport Cloud Router (MCR) instance as the lab circuit, is used to simulate an on premise location.
+A test VNET connected via a separate Expressroute circuit to the same Megaport Cloud Router (MCR) instance as the lab circuit, is used to simulate an on premise location.
 
 ![image](/images/test-vnet.png)
 
