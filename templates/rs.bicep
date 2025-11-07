@@ -34,6 +34,7 @@ resource c8k1BgpConn 'Microsoft.Network/virtualHubs/bgpConnections@2021-02-01' =
   dependsOn: [
     rsIpConfig
     RouteServer
+    c8k2BgpConn
   ]
   parent: RouteServer
 

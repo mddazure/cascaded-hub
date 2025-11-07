@@ -134,8 +134,8 @@ module cascadedhubvnet 'br/public:avm/res/network/virtual-network:0.7.1' = {
         remoteVirtualNetworkResourceId: hubvnet.outputs.resourceId
         allowVirtualNetworkAccess: true
         allowForwardedTraffic: true
-        useRemoteGateways: false
-        remotePeeringAllowGatewayTransit: false
+        useRemoteGateways: true
+        remotePeeringAllowGatewayTransit: true
         remotePeeringEnabled: true
         remotePeeringAllowForwardedTraffic: true
       }
@@ -243,6 +243,7 @@ module ergw 'br/public:avm/res/network/virtual-network-gateway:0.10.0' = {
     name: 'ergw'
     virtualNetworkResourceId: hubvnet.outputs.resourceId
     skuName: 'ErGw1AZ'
+    allowRemoteVnetTraffic: true
   }
 }
 module c8k1 'csr.bicep' = {

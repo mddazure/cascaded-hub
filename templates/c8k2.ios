@@ -3,7 +3,7 @@ ip route 10.0.0.64 255.255.255.192 10.0.0.129
 ! static route to spoke VNets address space pointing to CSR subnet default gateway
 ip route 172.16.0.0 255.240.0.0 GigabitEthernet1 10.0.0.1
 
-router bgp [asn-here]
+router bgp 65020
  bgp log-neighbor-changes
 ! let bgp redistribute static routes to ARS
  redistribute static 
@@ -24,3 +24,6 @@ ip access-list standard 10
 route-map SET_NEXTHOP_TO_SPOKES permit 10 
  match ip address 10
  set ip next-hop 10.0.1.68
+
+
+
