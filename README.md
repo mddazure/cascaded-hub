@@ -201,7 +201,7 @@ Traffic does not flow through the NVA's as is demonstrated by traceroute:
 
 ![image](/images/tracert.png)
 
-
-
+### Disclaimer
+The Cisco Catalyst 8000v Edge Software is used in this lab as an example of how a Network Virtual Appliance may be used to inject routes into Azure Route Server. This does not imply a recommendation or an  endorsement of this product. The principle demonstrated here will work equally well with other brands of Network Virtual Appliances.
 
 
