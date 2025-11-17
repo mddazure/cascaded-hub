@@ -6,7 +6,7 @@ Some customers choose to implement a "cascaded hub" model, where an intermediate
 
 A solution to this problem is to inject the spoke VNET prefixes into the Expressroute Gateway. This requires Azure Route Server (ARS), which is the element in Azure that provides a BGP interface to the Azure routing plane, and a Network Virtual Appliance to originate and inject the spoke prefixes into ARS. At the time of writing on October 2025, ARS itself does not have the ability to originate routes.
 
-This lab demonstrates how to build a "cascaded hub" hub & spoke network foundation using ARS and the Cisco 8000v NVA.
+This lab demonstrates how to build a "cascaded hub" hub & spoke network foundation using ARS and the Cisco Catalyst 8000v Edge Software running on a pair of Network Virtual Appliances (NVAs).
 
 ![image](/images/cascaded-hub.png)
 
